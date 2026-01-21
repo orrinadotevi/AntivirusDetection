@@ -9,7 +9,6 @@ import joblib
 
 from .features import extract_pe_features, vectorize_features
 
-
 DEFAULT_MODEL_PATH = Path(__file__).resolve().parent / "models" / "classifier.pk1"
 DEFAULT_FEATURES_PATH = Path(__file__).resolve().parent / "models" / "features.pkl"
 

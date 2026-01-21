@@ -12,7 +12,9 @@ from antivirus_detection.model import MalwareClassifier
 app = FastAPI(title="AntivirusDetection API", version="1.0.0")
 
 # In dev, allow a local frontend. In production, tighten this.
-allowed_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+allowed_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(
+    ","
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o for o in allowed_origins if o],

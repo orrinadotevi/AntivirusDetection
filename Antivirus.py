@@ -3,20 +3,23 @@ import numpy as np
 import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import SelectFromModel
-from sklearn.tree import DecisionTreeClassifier 
-from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import (
+    ExtraTreesClassifier,
+    RandomForestClassifier,
+    GradientBoostingClassifier,
+    AdaBoostClassifier,
+)
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import confusion_matrix
 import joblib
 import os
 
+data = pd.read_csv(r"C:\Users\orrin\Downloads\data.csv", sep="|")  # imported from GitHub
+X = data.drop(["Name", "md5", "legitimate"], axis=1).values
+y = data["legitimate"].values
 
-
-data = pd.read_csv(r'C:\Users\orrin\Downloads\data.csv', sep='|') #imported from GitHub
-X = data.drop(['Name', 'md5', 'legitimate'], axis=1).values
-y = data['legitimate'].values
-
-print('Researching important feature based on %i total features\n' % X.shape[1])
+print("Researching important feature based on %i total features\n" % X.shape[1])
 
 # Feature selection using Trees Classifier
 fsel = ExtraTreesClassifier().fit(X, y)
@@ -28,24 +31,27 @@ X_train, X_test, y_train, y_test = train_test_split(X_new, y, test_size=0.2)
 
 features = []
 
-print('%i features identified as important:' % nb_features)
+print("%i features identified as important:" % nb_features)
 
 indices = np.argsort(fsel.feature_importances_)[::-1][:nb_features]
 for f in range(nb_features):
-    print("%d. feature %s (%f)" % (f + 1, data.columns[2+indices[f]], fsel.feature_importances_[indices[f]]))
+    print(
+        "%d. feature %s (%f)"
+        % (f + 1, data.columns[2 + indices[f]], fsel.feature_importances_[indices[f]])
+    )
 
 # XXX : take care of the feature order
 for f in sorted(np.argsort(fsel.feature_importances_)[::-1][:nb_features]):
-    features.append(data.columns[2+f])
+    features.append(data.columns[2 + f])
 
 # Algorithm comparison
 algorithms = {
-        "DecisionTree": DecisionTreeClassifier(max_depth=10), 
-        "RandomForest": RandomForestClassifier(n_estimators=50),
-        "GradientBoosting": GradientBoostingClassifier(n_estimators=50),
-        "AdaBoost": AdaBoostClassifier(n_estimators=100),
-        "GNB": GaussianNB()
-    }
+    "DecisionTree": DecisionTreeClassifier(max_depth=10),
+    "RandomForest": RandomForestClassifier(n_estimators=50),
+    "GradientBoosting": GradientBoostingClassifier(n_estimators=50),
+    "AdaBoost": AdaBoostClassifier(n_estimators=100),
+    "GNB": GaussianNB(),
+}
 
 results = {}
 print("\nNow testing algorithms")
@@ -53,25 +59,25 @@ for algo in algorithms:
     clf = algorithms[algo]
     clf.fit(X_train, y_train)
     score = clf.score(X_test, y_test)
-    print("%s : %f %%" % (algo, score*100))
+    print("%s : %f %%" % (algo, score * 100))
     results[algo] = score
 
 winner = max(results, key=results.get)
-print('\nWinner algorithm is %s with a %f %% success' % (winner, results[winner]*100))
+print("\nWinner algorithm is %s with a %f %% success" % (winner, results[winner] * 100))
 
 # Ensure the directory exists
-os.makedirs('classifier', exist_ok=True)
+os.makedirs("classifier", exist_ok=True)
 
 # Save the algorithm and the feature list for later predictions
-print('Saving algorithm and feature list in classifier directory...')
-joblib.dump(algorithms[winner], 'C:/Users/orrin/Documents/classifier/classifier.pk1')
-with open('C:/Users/orrin/Documents/classifier/features.pkl', 'wb') as f:
+print("Saving algorithm and feature list in classifier directory...")
+joblib.dump(algorithms[winner], "C:/Users/orrin/Documents/classifier/classifier.pk1")
+with open("C:/Users/orrin/Documents/classifier/features.pkl", "wb") as f:
     pickle.dump(features, f)
-print('Saved')
+print("Saved")
 
 # Identify false and true positive rates
 clf = algorithms[winner]
 res = clf.predict(X_test)
 mt = confusion_matrix(y_test, res)
-print("False positive rate : %f %%" % ((mt[0][1] / float(sum(mt[0])))*100))
-print('False negative rate : %f %%' % ( (mt[1][0] / float(sum(mt[1]))*100)))
+print("False positive rate : %f %%" % ((mt[0][1] / float(sum(mt[0]))) * 100))
+print("False negative rate : %f %%" % ((mt[1][0] / float(sum(mt[1])) * 100)))

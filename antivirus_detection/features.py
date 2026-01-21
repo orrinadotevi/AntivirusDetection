@@ -6,7 +6,6 @@ from typing import Any, Dict, Iterable, List, Tuple
 
 import pefile
 
-
 # Default feature order expected by the included model.
 # If you retrain, the model will typically ship its own feature list file.
 FEATURE_NAMES: Tuple[str, ...] = (
@@ -59,7 +58,7 @@ def _resource_entropies(pe: pefile.PE) -> List[float]:
                     try:
                         rva = e.data.struct.OffsetToData
                         size = e.data.struct.Size
-                        data = pe.get_memory_mapped_image()[rva: rva + size]
+                        data = pe.get_memory_mapped_image()[rva : rva + size]
                         entropies.append(_shannon_entropy(data))
                     except Exception:
                         pass
@@ -110,22 +109,19 @@ def extract_pe_features(file_path: str | Path) -> Dict[str, Any]:
     # Optional header fields
     res["ImageBase"] = int(pe.OPTIONAL_HEADER.ImageBase)
     res["MajorOperatingSystemVersion"] = int(
-        getattr(pe.OPTIONAL_HEADER, "MajorOperatingSystemVersion", 0))
-    res["MajorSubsystemVersion"] = int(
-        getattr(pe.OPTIONAL_HEADER, "MajorSubsystemVersion", 0))
+        getattr(pe.OPTIONAL_HEADER, "MajorOperatingSystemVersion", 0)
+    )
+    res["MajorSubsystemVersion"] = int(getattr(pe.OPTIONAL_HEADER, "MajorSubsystemVersion", 0))
     res["Subsystem"] = int(pe.OPTIONAL_HEADER.Subsystem)
     res["DllCharacteristics"] = int(pe.OPTIONAL_HEADER.DllCharacteristics)
 
     # Section entropy
     try:
-        section_entropies = [float(s.get_entropy())
-                             for s in pe.sections] if pe.sections else []
+        section_entropies = [float(s.get_entropy()) for s in pe.sections] if pe.sections else []
     except Exception:
         section_entropies = []
-    res["SectionsMinEntropy"] = min(
-        section_entropies) if section_entropies else 0.0
-    res["SectionsMaxEntropy"] = max(
-        section_entropies) if section_entropies else 0.0
+    res["SectionsMinEntropy"] = min(section_entropies) if section_entropies else 0.0
+    res["SectionsMaxEntropy"] = max(section_entropies) if section_entropies else 0.0
 
     # Resource entropy
     r_ent = _resource_entropies(pe)
@@ -138,7 +134,9 @@ def extract_pe_features(file_path: str | Path) -> Dict[str, Any]:
     return res
 
 
-def vectorize_features(feature_dict: Dict[str, Any], ordered_features: Iterable[str]) -> List[float]:
+def vectorize_features(
+    feature_dict: Dict[str, Any], ordered_features: Iterable[str]
+) -> List[float]:
     """Return a numeric feature vector in the requested order."""
     vec: List[float] = []
     for name in ordered_features:
